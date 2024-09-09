@@ -1,7 +1,7 @@
 //! Implements [OpenApi Responses][responses].
 //!
 //! [responses]: https://spec.openapis.org/oas/latest.html#responses-object
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::openapi::{Ref, RefOr};
 use crate::IntoResponses;
 
+use super::extensions::Extensions;
 use super::{builder, header::Header, set_value, Content};
 
 builder! {
@@ -121,7 +122,7 @@ builder! {
 
         /// Optional extensions "x-something".
         #[serde(skip_serializing_if = "Option::is_none", flatten)]
-        pub extensions: Option<HashMap<String, serde_json::Value>>,
+        pub extensions: Option<Extensions>,
     }
 }
 
@@ -158,7 +159,7 @@ impl ResponseBuilder {
     }
 
     /// Add openapi extensions (x-something) to the [`Header`].
-    pub fn extensions(mut self, extensions: Option<HashMap<String, serde_json::Value>>) -> Self {
+    pub fn extensions(mut self, extensions: Option<Extensions>) -> Self {
         set_value!(self extensions extensions)
     }
 }

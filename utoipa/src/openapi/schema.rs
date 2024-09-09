@@ -2,11 +2,12 @@
 //! used to define field properties, enum values, array or object types.
 //!
 //! [schema]: https://spec.openapis.org/oas/latest.html#schema-object
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use super::extensions::Extensions;
 use super::RefOr;
 use super::{builder, security::SecurityScheme, set_value, xml::Xml, Deprecated, Response};
 use crate::{ToResponse, ToSchema};
@@ -353,7 +354,7 @@ builder! {
 
         /// Optional extensions `x-something`.
         #[serde(skip_serializing_if = "Option::is_none", flatten)]
-        pub extensions: Option<HashMap<String, serde_json::Value>>,
+        pub extensions: Option<Extensions>,
     }
 }
 
@@ -426,7 +427,7 @@ impl OneOfBuilder {
     }
 
     /// Add openapi extensions (`x-something`) for [`OneOf`].
-    pub fn extensions(mut self, extensions: Option<HashMap<String, serde_json::Value>>) -> Self {
+    pub fn extensions(mut self, extensions: Option<Extensions>) -> Self {
         set_value!(self extensions extensions)
     }
 
@@ -490,7 +491,7 @@ builder! {
 
         /// Optional extensions `x-something`.
         #[serde(skip_serializing_if = "Option::is_none", flatten)]
-        pub extensions: Option<HashMap<String, serde_json::Value>>,
+        pub extensions: Option<Extensions>,
     }
 }
 
@@ -563,7 +564,7 @@ impl AllOfBuilder {
     }
 
     /// Add openapi extensions (`x-something`) for [`AllOf`].
-    pub fn extensions(mut self, extensions: Option<HashMap<String, serde_json::Value>>) -> Self {
+    pub fn extensions(mut self, extensions: Option<Extensions>) -> Self {
         set_value!(self extensions extensions)
     }
 
@@ -623,7 +624,7 @@ builder! {
 
         /// Optional extensions `x-something`.
         #[serde(skip_serializing_if = "Option::is_none", flatten)]
-        pub extensions: Option<HashMap<String, serde_json::Value>>,
+        pub extensions: Option<Extensions>,
     }
 }
 
@@ -691,7 +692,7 @@ impl AnyOfBuilder {
     }
 
     /// Add openapi extensions (`x-something`) for [`AnyOf`].
-    pub fn extensions(mut self, extensions: Option<HashMap<String, serde_json::Value>>) -> Self {
+    pub fn extensions(mut self, extensions: Option<Extensions>) -> Self {
         set_value!(self extensions extensions)
     }
 
@@ -850,7 +851,7 @@ builder! {
 
         /// Optional extensions `x-something`.
         #[serde(skip_serializing_if = "Option::is_none", flatten)]
-        pub extensions: Option<HashMap<String, serde_json::Value>>,
+        pub extensions: Option<Extensions>,
     }
 }
 
@@ -1034,7 +1035,7 @@ impl ObjectBuilder {
     }
 
     /// Add openapi extensions (`x-something`) for [`Object`].
-    pub fn extensions(mut self, extensions: Option<HashMap<String, serde_json::Value>>) -> Self {
+    pub fn extensions(mut self, extensions: Option<Extensions>) -> Self {
         set_value!(self extensions extensions)
     }
 
@@ -1237,7 +1238,7 @@ builder! {
 
         /// Optional extensions `x-something`.
         #[serde(skip_serializing_if = "Option::is_none", flatten)]
-        pub extensions: Option<HashMap<String, serde_json::Value>>,
+        pub extensions: Option<Extensions>,
     }
 }
 
@@ -1336,7 +1337,7 @@ impl ArrayBuilder {
     }
 
     /// Add openapi extensions (`x-something`) for [`Array`].
-    pub fn extensions(mut self, extensions: Option<HashMap<String, serde_json::Value>>) -> Self {
+    pub fn extensions(mut self, extensions: Option<Extensions>) -> Self {
         set_value!(self extensions extensions)
     }
 
@@ -1493,6 +1494,7 @@ pub enum KnownFormat {
 #[cfg(test)]
 mod tests {
     use assert_json_diff::assert_json_eq;
+    use extensions::ExtensionBuilder;
     use serde_json::{json, Value};
 
     use super::*;
@@ -2124,11 +2126,10 @@ mod tests {
     #[test]
     fn object_with_extensions() {
         let expected = json!("value");
-        let json_value = ObjectBuilder::new()
-            .extensions(Some(
-                [("x-some-extension".to_string(), expected.clone())].into(),
-            ))
+        let extensions = ExtensionBuilder::new()
+            .add("x-some-extension", expected.clone())
             .build();
+        let json_value = ObjectBuilder::new().extensions(Some(extensions)).build();
 
         let value = serde_json::to_value(&json_value).unwrap();
         assert_eq!(value.get("x-some-extension"), Some(&expected));
@@ -2137,11 +2138,10 @@ mod tests {
     #[test]
     fn array_with_extensions() {
         let expected = json!("value");
-        let json_value = ArrayBuilder::new()
-            .extensions(Some(
-                [("x-some-extension".to_string(), expected.clone())].into(),
-            ))
+        let extensions = ExtensionBuilder::new()
+            .add("x-some-extension", expected.clone())
             .build();
+        let json_value = ArrayBuilder::new().extensions(Some(extensions)).build();
 
         let value = serde_json::to_value(&json_value).unwrap();
         assert_eq!(value.get("x-some-extension"), Some(&expected));
@@ -2150,11 +2150,10 @@ mod tests {
     #[test]
     fn oneof_with_extensions() {
         let expected = json!("value");
-        let json_value = OneOfBuilder::new()
-            .extensions(Some(
-                [("x-some-extension".to_string(), expected.clone())].into(),
-            ))
+        let extensions = ExtensionBuilder::new()
+            .add("x-some-extension", expected.clone())
             .build();
+        let json_value = OneOfBuilder::new().extensions(Some(extensions)).build();
 
         let value = serde_json::to_value(&json_value).unwrap();
         assert_eq!(value.get("x-some-extension"), Some(&expected));
@@ -2163,11 +2162,10 @@ mod tests {
     #[test]
     fn allof_with_extensions() {
         let expected = json!("value");
-        let json_value = AllOfBuilder::new()
-            .extensions(Some(
-                [("x-some-extension".to_string(), expected.clone())].into(),
-            ))
+        let extensions = ExtensionBuilder::new()
+            .add("x-some-extension", expected.clone())
             .build();
+        let json_value = AllOfBuilder::new().extensions(Some(extensions)).build();
 
         let value = serde_json::to_value(&json_value).unwrap();
         assert_eq!(value.get("x-some-extension"), Some(&expected));
@@ -2176,11 +2174,10 @@ mod tests {
     #[test]
     fn anyof_with_extensions() {
         let expected = json!("value");
-        let json_value = AnyOfBuilder::new()
-            .extensions(Some(
-                [("x-some-extension".to_string(), expected.clone())].into(),
-            ))
+        let extensions = ExtensionBuilder::new()
+            .add("x-some-extension", expected.clone())
             .build();
+        let json_value = AnyOfBuilder::new().extensions(Some(extensions)).build();
 
         let value = serde_json::to_value(&json_value).unwrap();
         assert_eq!(value.get("x-some-extension"), Some(&expected));

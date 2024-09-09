@@ -24,6 +24,7 @@ pub use self::{
 pub mod content;
 pub mod encoding;
 pub mod example;
+pub mod extensions;
 pub mod external_docs;
 pub mod header;
 pub mod info;
